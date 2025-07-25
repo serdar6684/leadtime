@@ -3,3 +3,9 @@ types-pytz
 pylint
 black
 mypy
+azure-functions
+azure-identity
+azure-mgmt-msi
+azure-mgmt-authorization
+pydantic
+retry
