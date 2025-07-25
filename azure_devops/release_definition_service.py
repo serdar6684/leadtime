@@ -1,13 +1,13 @@
+"""Services related to Azure DevOps release definitions."""
+
+from __future__ import annotations
+
 from azure_devops.api_client import AzureDevOpsClient
 
 def get_release_definition_id(
-    client: AzureDevOpsClient,
-    project_id: str,
-    definition_name: str
+    client: AzureDevOpsClient, project_id: str, definition_name: str
 ) -> int:
-    """
-    Récupère l'ID de la release definition correspondant à un nom donné.
-    """
+    """Return the release definition identifier matching the given name."""
     endpoint = (
         f"/{project_id}/_apis/release/definitions"
     )

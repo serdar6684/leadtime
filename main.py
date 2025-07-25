@@ -1,23 +1,35 @@
+"""Command line utility to fetch release environment metrics."""
+
+from __future__ import annotations
+
 from azure_devops.api_client import AzureDevOpsClient
 from azure_devops.project_service import get_project_id
-import config
-from config import AZURE_ORG_URL, AZURE_RELEASE_URL, API_VERSION
 from azure_devops.release_definition_service import get_release_definition_id
+from azure_devops.release_service import get_active_release_environments
+from config import (
+    AZURE_ORG_URL,
+    AZURE_RELEASE_URL,
+    API_VERSION,
+    PROJECT_NAME,
+    STAGE_NAME,
+)
 
-def main():
-    client_core = AzureDevOpsClient(config.AZURE_ORG_URL, config.API_VERSION)
-    client_release = AzureDevOpsClient(config.AZURE_RELEASE_URL, config.API_VERSION)
+def main() -> None:
+    """Retrieve project and release information then display metrics."""
 
-    try:
-        project_id = get_project_id(client_core, config.PROJECT_NAME)
-        print(f"Project ID pour 'One' : {project_id}")
+    client_core = AzureDevOpsClient(AZURE_ORG_URL, API_VERSION)
+    client_release = AzureDevOpsClient(AZURE_RELEASE_URL, API_VERSION)
 
-        release_def_id = get_release_definition_id(
-            client_release, project_id, config.STAGE_NAME
-        )
-        print(f"Release Definition ID : {release_def_id}")
-    except Exception as e:
-        print(f"Erreur : {e}")
+    project_id = get_project_id(client_core, PROJECT_NAME)
+    release_def_id = get_release_definition_id(
+        client_release, project_id, STAGE_NAME
+    )
+
+    environments = get_active_release_environments(
+        client_release, project_id, release_def_id
+    )
+    for env in environments:
+        print(env)
 
 if __name__ == "__main__":
     main()
