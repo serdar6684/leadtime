@@ -91,7 +91,7 @@ def main() -> None:
                         pr["merged_at"], deployed_at
                     )
                 
-                oldest_commit  = get_oldest_commit_from_pr(
+                oldest_commit = get_oldest_commit_from_pr(
                     client_core, PROJECT_NAME, repo_id, pr["id"]
                 )
 
@@ -100,7 +100,7 @@ def main() -> None:
                         f"⚠️ Aucun commit trouvé pour la PR {pr['id']} liée à l'artefact {artifact['alias']}. Artefact ignoré."
                     )
                     continue
-                oldest_commit_id, oldest_commit_date = result
+                oldest_commit_id, oldest_commit_date = oldest_commit
             else:
                 continue
 

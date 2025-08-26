@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+import requests
+
 from azure_devops.api_client import AzureDevOpsClient
 
 def get_project_id(client: AzureDevOpsClient, project_name: str) -> str:
@@ -149,7 +151,7 @@ def get_commit_date(
     try:
         response = client.get(endpoint, params=params)
         return response.get("committer", {}).get("date")
-    except Exception as error:
+    except (requests.RequestException, ValueError, RuntimeError) as error:
         raise RuntimeError(
             f"Erreur lors de la récupération de la date du commit {commit_id}: {error}"
         ) from error
@@ -187,10 +189,17 @@ def find_pr_by_commit_id(
                     "source_ref_name": pr["sourceRefName"],
                     "target_ref_name": pr["targetRefName"],
                     "status": pr["mergeStatus"],
-                    "last_merge_commit_id": merged_commit
+                    "last_merge_commit_id": merged_commit,
                 }
-    except Exception as error:
-        raise RuntimeError(f"Erreur lors de la recherche de PR liée au commit : {error}") from error
+    except (
+        requests.RequestException,
+        ValueError,
+        KeyError,
+        RuntimeError,
+    ) as error:
+        raise RuntimeError(
+            f"Erreur lors de la recherche de PR liée au commit : {error}"
+        ) from error
 
     return None
 
