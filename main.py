@@ -62,14 +62,23 @@ def main() -> None:
             continue
 
         for artifact in artifacts:
-            # print(artifact)
             commit_id = artifact["commit_id"]
-            commit_date = None
             repo_id = artifact["repository_id"]
-            commit_date = get_commit_date(client_core, PROJECT_NAME, repo_id, commit_id)
+
+            commit_date = get_commit_date(
+                client_core, PROJECT_NAME, repo_id, commit_id
+            )
+
+            if not commit_date:
+                print(
+                    f"⚠️ Date de commit introuvable pour l'artefact {artifact['alias']} (commit {commit_id}). Artefact ignoré."
+                )
+                continue
 
             metrics = {
-                "lead_time_artifact_commit_to_prod": calculate_duration(commit_date, deployed_at)
+                "lead_time_artifact_commit_to_prod": calculate_duration(
+                    commit_date, deployed_at
+                )
             }
 
             pr = find_pr_by_commit_id(
@@ -78,15 +87,26 @@ def main() -> None:
 
             if pr:
                 if pr.get("merged_at"):
-                    metrics["lead_time_pr_to_prod"] = calculate_duration(pr["merged_at"], deployed_at)
-
-                oldest_commit_id, oldest_commit_date = get_oldest_commit_from_pr(
+                    metrics["lead_time_pr_to_prod"] = calculate_duration(
+                        pr["merged_at"], deployed_at
+                    )
+                
+                oldest_commit  = get_oldest_commit_from_pr(
                     client_core, PROJECT_NAME, repo_id, pr["id"]
                 )
+
+                if not oldest_commit:
+                    print(
+                        f"⚠️ Aucun commit trouvé pour la PR {pr['id']} liée à l'artefact {artifact['alias']}. Artefact ignoré."
+                    )
+                    continue
+                oldest_commit_id, oldest_commit_date = result
             else:
                 continue
 
-            metrics["lead_time_pr_last_commit_to_prod"] = calculate_duration(oldest_commit_date, deployed_at)
+            metrics["lead_time_pr_last_commit_to_prod"] = calculate_duration(
+                oldest_commit_date, deployed_at
+            )
 
             enriched_payload = {
                 "timestamp": datetime.now(tz=timezone.utc).isoformat(),

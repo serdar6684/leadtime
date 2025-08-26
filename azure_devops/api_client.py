@@ -6,10 +6,8 @@ from __future__ import annotations
 
 import base64
 from typing import Any, Dict, Optional
-
 import requests
-
-from config import PAT_TOKEN
+import config
 
 class AzureDevOpsClient:
     """Simple wrapper to perform authenticated HTTP requests."""
@@ -21,8 +19,12 @@ class AzureDevOpsClient:
 
     def _create_session(self) -> requests.Session:
         """Configure an HTTP session with authentication headers."""
+
+        if not config.PAT_TOKEN:
+            raise ValueError("Le jeton PAT_TOKEN n'est pas défini dans les variables d'environnement.")
+
         session = requests.Session()
-        pat_bytes = f":{PAT_TOKEN}".encode("utf-8")
+        pat_bytes = f":{config.PAT_TOKEN}".encode("utf-8")
         pat_token = base64.b64encode(pat_bytes).decode("utf-8")
         session.headers.update(
             {"Authorization": f"Basic {pat_token}", "Content-Type": "application/json"}
@@ -30,8 +32,20 @@ class AzureDevOpsClient:
         return session
 
     def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-        """Send a GET request and return the parsed JSON response."""
+        """Send a GET request and return the parsed JSON response.
+
+        Applies the default timeout defined in :mod:`config` and raises a
+        :class:`RuntimeError` if a network issue occurs.
+        """
         url = f"{self.base_url}{endpoint}"
-        response = self.session.get(url, params=params)
+        try:
+            response = self.session.get(
+                url, params=params, timeout=config.DEFAULT_REQUEST_TIMEOUT,
+            )
+        except requests.RequestException as err:
+            raise RuntimeError(
+                f"Network error while requesting {url}: {err}"
+            ) from err
+        
         response.raise_for_status()
         return response.json()
