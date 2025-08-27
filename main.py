@@ -34,7 +34,7 @@ def calculate_duration(from_date: str, to_date: str) -> dict:
     }
 
 
-def main() -> None:
+def main() -> None:  # pragma: no cover
     """Main entry point to collect and print DORA Lead Time metrics per artifact."""
 
     client_core = AzureDevOpsClient(AZURE_ORG_URL, API_VERSION)
@@ -158,9 +158,8 @@ def main() -> None:
                 "metrics": metrics,
             }
 
-            # print(json.dumps(enriched_payload, indent=2))
             logger.info(json.dumps(enriched_payload, indent=2))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

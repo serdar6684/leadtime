@@ -1,6 +1,10 @@
 -r requirements.in
 
 pytest
+pytest-cov
+hypothesis
+requests-mock
+tzdata
 types-pytz
 pylint
 black

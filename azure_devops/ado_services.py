@@ -82,28 +82,23 @@ def get_active_release_environments(
             if not queued_on or not last_modified:
                 continue
 
-            try:
-                results.append(
-                    ReleaseEnvironment(
-                        environment_id=environment.get("id"),
-                        environment_name=environment.get("name"),
-                        environment_status=environment.get("status"),
-                        environment_start_at=queued_on,
-                        environment_finished_at=last_modified,
-                        release_id=release.get("id"),
-                        release_name=release.get("name"),
-                        release_status=release.get("status"),
-                        release_created_on=release.get("createdOn"),
-                        release_modified_on=release.get("modifiedOn"),
-                        definition_environment_id=environment.get(
-                            "definitionEnvironmentId"
-                        ),
-                    )
+            results.append(
+                ReleaseEnvironment(
+                    environment_id=environment.get("id"),
+                    environment_name=environment.get("name"),
+                    environment_status=environment.get("status"),
+                    environment_start_at=queued_on,
+                    environment_finished_at=last_modified,
+                    release_id=release.get("id"),
+                    release_name=release.get("name"),
+                    release_status=release.get("status"),
+                    release_created_on=release.get("createdOn"),
+                    release_modified_on=release.get("modifiedOn"),
+                    definition_environment_id=environment.get(
+                        "definitionEnvironmentId"
+                    ),
                 )
-            except KeyError as err:
-                raise ValueError(
-                    f"Error extracting environment information for release ID {release.get('id')}: {err}"
-                ) from err
+            )
 
     return results
 
