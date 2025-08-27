@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import logging
 import requests
 
 from azure_devops.api_client import AzureDevOpsClient
+from azure_devops.models import Artifact, PullRequest, ReleaseEnvironment
 from config import LOG_LEVEL
 
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO))
@@ -49,7 +50,7 @@ def get_release_definition_id(
 
 def get_active_release_environments(
     client: AzureDevOpsClient, project_id: str, definition_id: int, top: int = 100
-) -> List[Dict[str, Any]]:
+) -> List[ReleaseEnvironment]:
     """Return all release environments where PRD was deployed successfully."""
     # pylint: disable=too-many-locals
 
@@ -63,7 +64,7 @@ def get_active_release_environments(
     }
 
     releases = client.get(endpoint, params=params)
-    results: List[Dict[str, Any]] = []
+    results: List[ReleaseEnvironment] = []
 
     for release in releases.get("value", []):
         if release.get("status") != "active":
@@ -84,19 +85,19 @@ def get_active_release_environments(
 
             try:
                 results.append(
-                    {
-                        "environment_id": environment.get("id"),
-                        "environment_name": environment.get("name"),
-                        "environment_status": environment.get("status"),
-                        "environment_start_at": queued_on,
-                        "environment_finished_at": last_modified,
-                        "release_id": release.get("id"),
-                        "release_name": release.get("name"),
-                        "release_status": release.get("status"),
-                        "release_created_on": release.get("createdOn"),
-                        "release_modified_on": release.get("modifiedOn"),
-                        "definition_environment_id": environment.get("definitionEnvironmentId"),
-                    }
+                    ReleaseEnvironment(
+                        environment_id=environment.get("id"),
+                        environment_name=environment.get("name"),
+                        environment_status=environment.get("status"),
+                        environment_start_at=queued_on,
+                        environment_finished_at=last_modified,
+                        release_id=release.get("id"),
+                        release_name=release.get("name"),
+                        release_status=release.get("status"),
+                        release_created_on=release.get("createdOn"),
+                        release_modified_on=release.get("modifiedOn"),
+                        definition_environment_id=environment.get("definitionEnvironmentId"),
+                    )
                 )
             except KeyError as err:
                 raise ValueError(
@@ -107,7 +108,7 @@ def get_active_release_environments(
 
 def get_all_artifact_metadata(
     client: AzureDevOpsClient, project_name: str, release_id: int
-) -> List[Dict[str, str]]:
+) -> List[Artifact]:
     """Extract all relevant metadata for each artifact in a given release."""
     endpoint = f"/{project_name}/_apis/release/releases/{release_id}"
     params = {"api-version": client.api_version}
@@ -118,25 +119,25 @@ def get_all_artifact_metadata(
     if not artifacts:
         raise ValueError(f"No artifact found for release ID {release_id}.")
     
-    results = []
+    results: List[Artifact] = []
 
     for artifact in artifacts:
         definition_ref = artifact.get("definitionReference", {})
 
         try:
             results.append(
-                {
-                    "alias": artifact.get("alias", "unknown"),
-                    "branch_name": definition_ref["branch"]["name"],
-                    "branch_id": definition_ref["branch"]["id"],
-                    "repository_name": definition_ref["repository"]["name"],
-                    "repository_id": definition_ref["repository"]["id"],
-                    "definition_name": definition_ref["definition"]["name"],
-                    "definition_id": definition_ref["definition"]["id"],
-                    "commit_id": definition_ref["sourceVersion"]["id"],
-                    "build_id": int(definition_ref["version"]["id"]),
-                    "build_url": definition_ref["artifactSourceVersionUrl"]["id"],
-                }
+                Artifact(
+                    alias=artifact.get("alias", "unknown"),
+                    branch_name=definition_ref["branch"]["name"],
+                    branch_id=definition_ref["branch"]["id"],
+                    repository_name=definition_ref["repository"]["name"],
+                    repository_id=definition_ref["repository"]["id"],
+                    definition_name=definition_ref["definition"]["name"],
+                    definition_id=definition_ref["definition"]["id"],
+                    commit_id=definition_ref["sourceVersion"]["id"],
+                    build_id=int(definition_ref["version"]["id"]),
+                    build_url=definition_ref["artifactSourceVersionUrl"]["id"],
+                )
             )
         except KeyError as err:
             raise ValueError(
@@ -168,7 +169,7 @@ def find_pr_by_commit_id(
     repository_id: str,
     commit_id: str,
     target_ref: str
-) -> Optional[Dict[str, str]]:
+) -> Optional[PullRequest]:
     """Search for a completed pull request whose merged commit matches the given commit ID."""
     endpoint = (
         f"/{project_name}/_apis/git/repositories/{repository_id}/pullRequests"
@@ -185,15 +186,15 @@ def find_pr_by_commit_id(
         for pr in response.get("value", []):
             merged_commit = pr.get("lastMergeCommit", {}).get("commitId")
             if merged_commit and merged_commit.lower() == commit_id.lower():
-                return {
-                    "id": str(pr["pullRequestId"]),
-                    "merged_at": pr["closedDate"],
-                    "created_at": pr["creationDate"],
-                    "source_ref_name": pr["sourceRefName"],
-                    "target_ref_name": pr["targetRefName"],
-                    "status": pr["mergeStatus"],
-                    "last_merge_commit_id": merged_commit,
-                }
+                return PullRequest(
+                    id=str(pr["pullRequestId"]),
+                    merged_at=pr.get("closedDate"),
+                    created_at=pr.get("creationDate"),
+                    source_ref_name=pr.get("sourceRefName"),
+                    target_ref_name=pr.get("targetRefName"),
+                    status=pr.get("mergeStatus"),
+                    last_merge_commit_id=merged_commit,
+                )
     except (
         requests.RequestException,
         ValueError,

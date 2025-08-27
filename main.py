@@ -54,23 +54,23 @@ def main() -> None:
     )
 
     for env in environments:
-        deployed_at = env.get("environment_finished_at")
+        deployed_at = env.environment_finished_at
         if not deployed_at:
             continue
         
         try:
             artifacts = get_all_artifact_metadata(
-                client_release, PROJECT_NAME, env["release_id"]
+                client_release, PROJECT_NAME, env.release_id
             )
         except ValueError as error:
             logger.warning(
-                f"⚠️ Unable to read release artifacts : %s", error
+                "⚠️ Unable to read release artifacts : %s", error
             )
             continue
 
         for artifact in artifacts:
-            commit_id = artifact["commit_id"]
-            repo_id = artifact["repository_id"]
+            commit_id = artifact.commit_id
+            repo_id = artifact.repository_id
 
             commit_date = get_commit_date(
                 client_core, PROJECT_NAME, repo_id, commit_id
@@ -79,7 +79,7 @@ def main() -> None:
             if not commit_date:
                 logger.warning(
                     "⚠️ Commit date not found for artifact %s (commit %s). Artifact ignored.",
-                    artifact["alias"],
+                    artifact.alias,
                     commit_id,
                 )
                 continue
@@ -91,24 +91,24 @@ def main() -> None:
             }
 
             pr = find_pr_by_commit_id(
-                client_core, PROJECT_NAME, repo_id, commit_id, artifact["branch_name"]
+                client_core, PROJECT_NAME, repo_id, commit_id, artifact.branch_name
             )
 
             if pr:
-                if pr.get("merged_at"):
+                if pr.merged_at:
                     metrics["lead_time_pr_to_prod"] = calculate_duration(
-                        pr["merged_at"], deployed_at
+                        pr.merged_at, deployed_at
                     )
                 
                 oldest_commit = get_oldest_commit_from_pr(
-                    client_core, PROJECT_NAME, repo_id, pr["id"]
+                    client_core, PROJECT_NAME, repo_id, pr.id
                 )
 
                 if not oldest_commit:
                     logger.warning(
                         "⚠️ No commit found for pull request %s linked to artifact %s. Artifact ignored.",
-                        pr["id"],
-                        artifact["alias"],
+                        pr.id,
+                        artifact.alias,
                     )
                     continue
                 oldest_commit_id, oldest_commit_date = oldest_commit
@@ -126,42 +126,42 @@ def main() -> None:
                     "id": project_id,
                 },
                 "release": {
-                    "id": env["release_id"],
-                    "name": env.get("release_name"),
-                    "status": env.get("release_status"),
-                    "created_on": env.get("release_created_on"),
-                    "modified_on": env.get("release_modified_on"),
+                    "id": env.release_id,
+                    "name": env.release_name,
+                    "status": env.release_status,
+                    "created_on": env.release_created_on,
+                    "modified_on": env.release_modified_on,
                     "definition": STAGE_NAME,
                     "deployed_at": deployed_at,
                 },
                 "environment": {
-                    "id": env.get("environment_id"),
-                    "name": env.get("environment_name"),
-                    "status": env.get("environment_status"),
-                    "start_at": env.get("environment_start_at"),
-                    "finished_at": env.get("environment_finished_at"),
+                    "id": env.environment_id,
+                    "name": env.environment_name,
+                    "status": env.environment_status,
+                    "start_at": env.environment_start_at,
+                    "finished_at": env.environment_finished_at,
                 },
                 "repository": {
                     "id": repo_id,
-                    "name": artifact["repository_name"],
-                    "branch_name": artifact["branch_name"],
+                    "name": artifact.repository_name,
+                    "branch_name": artifact.branch_name,
                 },
                 "artifact": {
-                    "alias": artifact["alias"],
-                    "branch_name": artifact["branch_name"],
-                    "branch_id": artifact["branch_id"],
+                    "alias": artifact.alias,
+                    "branch_name": artifact.branch_name,
+                    "branch_id": artifact.branch_id,
                     "commit_id": commit_id,
                     "commit_date": commit_date,
-                    "build_id": artifact["build_id"],
-                    "build_url": artifact["build_url"],
+                    "build_id": artifact.build_id,
+                    "build_url": artifact.build_url,
                 },
                 "pullrequest": {
-                    "id": pr.get("id"),
-                    "merged_at": pr.get("merged_at"),
-                    "created_at": pr.get("created_at"),
-                    "source_ref_name": pr.get("source_ref_name"),
-                    "target_ref_name": pr.get("target_ref_name"),
-                    "status": pr.get("status"),
+                    "id": pr.id,
+                    "merged_at": pr.merged_at,
+                    "created_at": pr.created_at,
+                    "source_ref_name": pr.source_ref_name,
+                    "target_ref_name": pr.target_ref_name,
+                    "status": pr.status,
                     "last_merge_commit_id": oldest_commit_id,
                     "last_merge_commit_date": oldest_commit_date,
                 },
