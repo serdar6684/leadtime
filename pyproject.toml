@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "leadtime"
+version = "0.1.0"
+description = "Command-line utility to collect DORA lead time metrics from Azure DevOps releases."
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+dependencies = [
+    "azure-functions",
+    "requests",
+    "python-dotenv",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "types-pytz",
+    "pylint",
+    "black",
+    "mypy",
+    "bandit",
+]
+ci = [
+    "azure-identity",
+    "azure-mgmt-msi",
+    "azure-mgmt-authorization",
+]
