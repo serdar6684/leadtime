@@ -28,6 +28,7 @@ from config import (
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO))
 logger = logging.getLogger(__name__)
 
+
 def calculate_duration(from_date: str, to_date: str) -> dict:
     """Return a duration breakdown between two ISO timestamps."""
     start = datetime.fromisoformat(from_date.replace("Z", "+00:00"))
@@ -39,6 +40,7 @@ def calculate_duration(from_date: str, to_date: str) -> dict:
         "minutes": round(delta / 60, 2),
         "hours": round(delta / 3600, 2),
     }
+
 
 def main() -> None:
     """Main entry point to collect and print DORA Lead Time metrics per artifact."""
@@ -57,24 +59,20 @@ def main() -> None:
         deployed_at = env.environment_finished_at
         if not deployed_at:
             continue
-        
+
         try:
             artifacts = get_all_artifact_metadata(
                 client_release, PROJECT_NAME, env.release_id
             )
         except ValueError as error:
-            logger.warning(
-                "⚠️ Unable to read release artifacts : %s", error
-            )
+            logger.warning("⚠️ Unable to read release artifacts : %s", error)
             continue
 
         for artifact in artifacts:
             commit_id = artifact.commit_id
             repo_id = artifact.repository_id
 
-            commit_date = get_commit_date(
-                client_core, PROJECT_NAME, repo_id, commit_id
-            )
+            commit_date = get_commit_date(client_core, PROJECT_NAME, repo_id, commit_id)
 
             if not commit_date:
                 logger.warning(
@@ -99,7 +97,7 @@ def main() -> None:
                     metrics["lead_time_pr_to_prod"] = calculate_duration(
                         pr.merged_at, deployed_at
                     )
-                
+
                 oldest_commit = get_oldest_commit_from_pr(
                     client_core, PROJECT_NAME, repo_id, pr.id
                 )

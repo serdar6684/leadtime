@@ -50,6 +50,6 @@ class AzureDevOpsClient:
             raise RuntimeError(
                 f"Network error while requesting {url}: {err}"
             ) from err
-        
+
         response.raise_for_status()
         return response.json()

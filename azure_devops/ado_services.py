@@ -118,7 +118,7 @@ def get_all_artifact_metadata(
 
     if not artifacts:
         raise ValueError(f"No artifact found for release ID {release_id}.")
-    
+
     results: List[Artifact] = []
 
     for artifact in artifacts:
@@ -143,7 +143,7 @@ def get_all_artifact_metadata(
             raise ValueError(
                 f"Error extracting primary artifact information for release ID {release_id}: {err}"
             ) from err
-    
+
     return results
 
 
