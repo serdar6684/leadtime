@@ -5,11 +5,14 @@ and other global parameters used throughout the project.
 """
 
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 AZURE_ORG_URL = "https://dev.azure.com/lpl-sources"
 AZURE_RELEASE_URL = "https://vsrm.dev.azure.com/lpl-sources"
 API_VERSION = "7.1"
-PAT_TOKEN = os.getenv("PAT_TOKEN", "")
+PAT_TOKEN = os.getenv("PAT_TOKEN")
 
 # HTTP Client
 DEFAULT_REQUEST_TIMEOUT = 10

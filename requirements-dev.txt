@@ -9,3 +9,5 @@ azure-mgmt-msi
 azure-mgmt-authorization
 pydantic
 retry
+bandit
+python-dotenv

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 import logging
+from urllib.parse import quote
 import requests
 
 from azure_devops.api_client import AzureDevOpsClient
@@ -33,7 +34,7 @@ def get_release_definition_id(
     client: AzureDevOpsClient, project_id: str, definition_name: str
 ) -> int:
     """Return the release definition identifier matching the given name."""
-    endpoint = f"/{project_id}/_apis/release/definitions"
+    endpoint = f"/{quote(project_id, safe='')}/_apis/release/definitions"
     params = {"api-version": client.api_version, "searchText": definition_name}
 
     data = client.get(endpoint, params=params)
@@ -52,7 +53,7 @@ def get_active_release_environments(
     """Return all release environments where PRD was deployed successfully."""
     # pylint: disable=too-many-locals
 
-    endpoint = f"/{project_id}/_apis/release/releases"
+    endpoint = f"/{quote(project_id, safe='')}/_apis/release/releases"
     params = {
         "api-version": client.api_version,
         "queryOrder": "descending",
@@ -111,7 +112,7 @@ def get_all_artifact_metadata(
     client: AzureDevOpsClient, project_name: str, release_id: int
 ) -> List[Artifact]:
     """Extract all relevant metadata for each artifact in a given release."""
-    endpoint = f"/{project_name}/_apis/release/releases/{release_id}"
+    endpoint = f"/{quote(project_name, safe='')}/_apis/release/releases/{quote(str(release_id), safe='')}"
     params = {"api-version": client.api_version}
 
     release_data = client.get(endpoint, params=params)
@@ -153,7 +154,8 @@ def get_commit_date(
 ) -> Optional[str]:
     """Return the ISO timestamp of the given commit."""
     endpoint = (
-        f"/{project_name}/_apis/git/repositories/{repository_id}/commits/{commit_id}"
+        f"/{quote(project_name, safe='')}/_apis/git/repositories/"
+        f"{quote(repository_id, safe='')}/commits/{quote(commit_id, safe='')}"
     )
     params = {"api-version": client.api_version}
 
@@ -174,7 +176,10 @@ def find_pr_by_commit_id(
     target_ref: str,
 ) -> Optional[PullRequest]:
     """Search for a completed pull request whose merged commit matches the given commit ID."""
-    endpoint = f"/{project_name}/_apis/git/repositories/{repository_id}/pullRequests"
+    endpoint = (
+        f"/{quote(project_name, safe='')}/_apis/git/repositories/"
+        f"{quote(repository_id, safe='')}/pullRequests"
+    )
     params = {
         "api-version": "7.1-preview.1",
         "searchCriteria.status": "completed",
@@ -212,7 +217,8 @@ def find_pr_by_commit_id(
 def get_oldest_commit_from_pr(client, project_name, repo_id, pr_id):
     """Get the first commit in a given pull request."""
     endpoint = (
-        f"/{project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pr_id}/commits"
+        f"/{quote(project_name, safe='')}/_apis/git/repositories/"
+        f"{quote(repo_id, safe='')}/pullRequests/{quote(pr_id, safe='')}/commits"
     )
     params = {"api-version": "7.1-preview.1"}
     response = client.get(endpoint, params=params)

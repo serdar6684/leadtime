@@ -208,3 +208,8 @@ __marimo__/
 
 # Perso
 secrets.txt
+
+# Secrets & environments
+secrets/
+*.pem
+*.key
