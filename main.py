@@ -6,24 +6,16 @@ import json
 import logging
 from datetime import datetime, timezone
 
+from azure_devops.ado_services import (find_pr_by_commit_id,
+                                       get_active_release_environments,
+                                       get_all_artifact_metadata,
+                                       get_commit_date,
+                                       get_oldest_commit_from_pr,
+                                       get_project_id,
+                                       get_release_definition_id)
 from azure_devops.api_client import AzureDevOpsClient
-from azure_devops.ado_services import (
-    get_project_id,
-    get_release_definition_id,
-    get_active_release_environments,
-    get_all_artifact_metadata,
-    get_commit_date,
-    find_pr_by_commit_id,
-    get_oldest_commit_from_pr,
-)
-from config import (
-    AZURE_ORG_URL,
-    AZURE_RELEASE_URL,
-    API_VERSION,
-    PROJECT_NAME,
-    STAGE_NAME,
-    LOG_LEVEL,
-)
+from config import (API_VERSION, AZURE_ORG_URL, AZURE_RELEASE_URL, LOG_LEVEL,
+                    PROJECT_NAME, STAGE_NAME)
 
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO))
 logger = logging.getLogger(__name__)

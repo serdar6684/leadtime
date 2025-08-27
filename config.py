@@ -5,6 +5,7 @@ and other global parameters used throughout the project.
 """
 
 import os
+
 from dotenv import load_dotenv
 
 load_dotenv()

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import List, Optional
-
 import logging
+from typing import List, Optional
 from urllib.parse import quote
+
 import requests
 
 from azure_devops.api_client import AzureDevOpsClient
