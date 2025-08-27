@@ -1,17 +1,23 @@
-"""Helper functions to standardize HTTP responses in Azure Functions."""
+"""Helper functions for standardised HTTP requests."""
 
+from typing import Iterable, Optional
 import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import config
 
-def get_retry_session() -> requests.Session:
+def get_retry_session(
+    retries: int = config.RETRY_TOTAL,
+    backoff_factor: int = config.RETRY_BACKOFF_FACTOR,
+    status_forcelist: Optional[Iterable[int]] = None,
+    allowed_methods: Optional[Iterable[str]] = None,
+) -> requests.Session:
     """Create a requests session with retry logic."""
     retry_strategy = Retry(
-        total=config.RETRY_TOTAL,
-        backoff_factor=config.RETRY_BACKOFF_FACTOR,
-        status_forcelist=[429, 500, 502, 503, 504],
-        allowed_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
+        total=retries,
+        backoff_factor=backoff_factor,
+        status_forcelist=status_forcelist,
+        allowed_methods=allowed_methods,
         raise_on_status=False,
     )
 
@@ -21,3 +27,5 @@ def get_retry_session() -> requests.Session:
     session.mount("https://", adapter)
     session.mount("http://", adapter)
     return session
+
+__all__ = ["get_retry_session"]

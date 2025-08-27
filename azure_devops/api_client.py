@@ -8,6 +8,7 @@ import base64
 from typing import Any, Dict, Optional
 import requests
 import config
+from azure_http import get_retry_session
 
 class AzureDevOpsClient:
     """Simple wrapper to perform authenticated HTTP requests."""
@@ -21,9 +22,12 @@ class AzureDevOpsClient:
         """Configure an HTTP session with authentication headers."""
 
         if not config.PAT_TOKEN:
-            raise ValueError("Le jeton PAT_TOKEN n'est pas défini dans les variables d'environnement.")
+            raise ValueError("PAT_TOKEN is not set in the environment variables.")
 
-        session = requests.Session()
+        session = get_retry_session(
+            retries=config.RETRY_TOTAL,
+            backoff_factor=config.RETRY_BACKOFF_FACTOR,
+        )
         pat_bytes = f":{config.PAT_TOKEN}".encode("utf-8")
         pat_token = base64.b64encode(pat_bytes).decode("utf-8")
         session.headers.update(

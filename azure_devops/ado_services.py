@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+import logging
 import requests
 
 from azure_devops.api_client import AzureDevOpsClient
+from config import LOG_LEVEL
+
+logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO))
+logger = logging.getLogger(__name__)
 
 def get_project_id(client: AzureDevOpsClient, project_name: str) -> str:
     """Return the project identifier for the given project name."""
@@ -19,7 +24,7 @@ def get_project_id(client: AzureDevOpsClient, project_name: str) -> str:
         if project.get("name") == project_name:
             return project.get("id")
 
-    raise ValueError(f"Projet nommé '{project_name}' introuvable.")
+    raise ValueError(f"Project named '{project_name}' not found.")
 
 def get_release_definition_id(
     client: AzureDevOpsClient, project_id: str, definition_name: str
@@ -40,7 +45,7 @@ def get_release_definition_id(
         if definition.get("name") == definition_name:
             return definition.get("id")
 
-    raise ValueError(f"Release definition '{definition_name}' introuvable.")
+    raise ValueError(f"Release definition '{definition_name}' not found.")
 
 def get_active_release_environments(
     client: AzureDevOpsClient, project_id: str, definition_id: int, top: int = 100
@@ -95,7 +100,7 @@ def get_active_release_environments(
                 )
             except KeyError as err:
                 raise ValueError(
-                    f"Erreur lors de l'extraction des informations de l'environment pour la release ID {release.get('id')}: {err}"
+                    f"Error extracting environment information for release ID {release.get('id')}: {err}"
                 ) from err
 
     return results
@@ -111,7 +116,7 @@ def get_all_artifact_metadata(
     artifacts = release_data.get("artifacts", [])
 
     if not artifacts:
-        raise ValueError(f"Aucun artefact trouvé pour la release ID {release_id}.")
+        raise ValueError(f"No artifact found for release ID {release_id}.")
     
     results = []
 
@@ -135,7 +140,7 @@ def get_all_artifact_metadata(
             )
         except KeyError as err:
             raise ValueError(
-                f"Erreur lors de l'extraction des informations de l'artefact principal pour la release ID {release_id}: {err}"
+                f"Error extracting primary artifact information for release ID {release_id}: {err}"
             ) from err
     
     return results
@@ -153,7 +158,7 @@ def get_commit_date(
         return response.get("committer", {}).get("date")
     except (requests.RequestException, ValueError, RuntimeError) as error:
         raise RuntimeError(
-            f"Erreur lors de la récupération de la date du commit {commit_id}: {error}"
+            f"Error retrieving commit date for {commit_id}: {error}"
         ) from error
 
 
@@ -164,9 +169,7 @@ def find_pr_by_commit_id(
     commit_id: str,
     target_ref: str
 ) -> Optional[Dict[str, str]]:
-    """
-    Search for a completed PR whose merged commit matches the given commit_id.
-    """
+    """Search for a completed pull request whose merged commit matches the given commit ID."""
     endpoint = (
         f"/{project_name}/_apis/git/repositories/{repository_id}/pullRequests"
     )
@@ -198,14 +201,14 @@ def find_pr_by_commit_id(
         RuntimeError,
     ) as error:
         raise RuntimeError(
-            f"Erreur lors de la recherche de PR liée au commit : {error}"
+            f"Error searching for pull request linked to commit: {error}"
         ) from error
 
     return None
 
 
 def get_oldest_commit_from_pr(client, project_name, repo_id, pr_id):
-    """Get the first commit in a given PR."""
+    """Get the first commit in a given pull request."""
     endpoint = f"/{project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pr_id}/commits"
     params = {"api-version": "7.1-preview.1"}
     response = client.get(endpoint, params=params)
@@ -214,5 +217,5 @@ def get_oldest_commit_from_pr(client, project_name, repo_id, pr_id):
     if not commits:
         return None
 
-    # Le plus vieux commit est le premier de la liste
+    # The oldest commit is the last item in the list
     return commits[-1].get("commitId"), commits[-1].get("committer", {}).get("date")

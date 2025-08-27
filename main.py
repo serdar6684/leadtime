@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 
 from azure_devops.api_client import AzureDevOpsClient
@@ -13,7 +14,7 @@ from azure_devops.ado_services import (
     get_all_artifact_metadata,
     get_commit_date,
     find_pr_by_commit_id,
-    get_oldest_commit_from_pr
+    get_oldest_commit_from_pr,
 )
 from config import (
     AZURE_ORG_URL,
@@ -21,7 +22,11 @@ from config import (
     API_VERSION,
     PROJECT_NAME,
     STAGE_NAME,
+    LOG_LEVEL,
 )
+
+logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO))
+logger = logging.getLogger(__name__)
 
 def calculate_duration(from_date: str, to_date: str) -> dict:
     """Return a duration breakdown between two ISO timestamps."""
@@ -58,7 +63,9 @@ def main() -> None:
                 client_release, PROJECT_NAME, env["release_id"]
             )
         except ValueError as error:
-            print(f"⚠️ Impossible de lire les artefacts de la release : {error}")
+            logger.warning(
+                f"⚠️ Unable to read release artifacts : %s", error
+            )
             continue
 
         for artifact in artifacts:
@@ -70,8 +77,10 @@ def main() -> None:
             )
 
             if not commit_date:
-                print(
-                    f"⚠️ Date de commit introuvable pour l'artefact {artifact['alias']} (commit {commit_id}). Artefact ignoré."
+                logger.warning(
+                    "⚠️ Commit date not found for artifact %s (commit %s). Artifact ignored.",
+                    artifact["alias"],
+                    commit_id,
                 )
                 continue
 
@@ -96,8 +105,10 @@ def main() -> None:
                 )
 
                 if not oldest_commit:
-                    print(
-                        f"⚠️ Aucun commit trouvé pour la PR {pr['id']} liée à l'artefact {artifact['alias']}. Artefact ignoré."
+                    logger.warning(
+                        "⚠️ No commit found for pull request %s linked to artifact %s. Artifact ignored.",
+                        pr["id"],
+                        artifact["alias"],
                     )
                     continue
                 oldest_commit_id, oldest_commit_date = oldest_commit
@@ -157,7 +168,8 @@ def main() -> None:
                 "metrics": metrics,
             }
 
-            print(json.dumps(enriched_payload, indent=2))
+            # print(json.dumps(enriched_payload, indent=2))
+            logger.info(json.dumps(enriched_payload, indent=2))
 
 
 if __name__ == "__main__":
