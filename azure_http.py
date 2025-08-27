@@ -6,6 +6,7 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import config
 
+
 def get_retry_session(
     retries: int = config.RETRY_TOTAL,
     backoff_factor: int = config.RETRY_BACKOFF_FACTOR,
@@ -27,5 +28,6 @@ def get_retry_session(
     session.mount("https://", adapter)
     session.mount("http://", adapter)
     return session
+
 
 __all__ = ["get_retry_session"]

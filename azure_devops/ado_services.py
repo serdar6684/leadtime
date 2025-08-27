@@ -14,6 +14,7 @@ from config import LOG_LEVEL
 logging.basicConfig(level=getattr(logging, LOG_LEVEL.upper(), logging.INFO))
 logger = logging.getLogger(__name__)
 
+
 def get_project_id(client: AzureDevOpsClient, project_name: str) -> str:
     """Return the project identifier for the given project name."""
 
@@ -27,17 +28,13 @@ def get_project_id(client: AzureDevOpsClient, project_name: str) -> str:
 
     raise ValueError(f"Project named '{project_name}' not found.")
 
+
 def get_release_definition_id(
     client: AzureDevOpsClient, project_id: str, definition_name: str
 ) -> int:
     """Return the release definition identifier matching the given name."""
-    endpoint = (
-        f"/{project_id}/_apis/release/definitions"
-    )
-    params = {
-        "api-version": client.api_version,
-        "searchText": definition_name
-    }
+    endpoint = f"/{project_id}/_apis/release/definitions"
+    params = {"api-version": client.api_version, "searchText": definition_name}
 
     data = client.get(endpoint, params=params)
     definitions = data.get("value", [])
@@ -47,6 +44,7 @@ def get_release_definition_id(
             return definition.get("id")
 
     raise ValueError(f"Release definition '{definition_name}' not found.")
+
 
 def get_active_release_environments(
     client: AzureDevOpsClient, project_id: str, definition_id: int, top: int = 100
@@ -96,7 +94,9 @@ def get_active_release_environments(
                         release_status=release.get("status"),
                         release_created_on=release.get("createdOn"),
                         release_modified_on=release.get("modifiedOn"),
-                        definition_environment_id=environment.get("definitionEnvironmentId"),
+                        definition_environment_id=environment.get(
+                            "definitionEnvironmentId"
+                        ),
                     )
                 )
             except KeyError as err:
@@ -105,6 +105,7 @@ def get_active_release_environments(
                 ) from err
 
     return results
+
 
 def get_all_artifact_metadata(
     client: AzureDevOpsClient, project_name: str, release_id: int
@@ -151,7 +152,9 @@ def get_commit_date(
     client: AzureDevOpsClient, project_name: str, repository_id: str, commit_id: str
 ) -> Optional[str]:
     """Return the ISO timestamp of the given commit."""
-    endpoint = f"/{project_name}/_apis/git/repositories/{repository_id}/commits/{commit_id}"
+    endpoint = (
+        f"/{project_name}/_apis/git/repositories/{repository_id}/commits/{commit_id}"
+    )
     params = {"api-version": client.api_version}
 
     try:
@@ -168,17 +171,15 @@ def find_pr_by_commit_id(
     project_name: str,
     repository_id: str,
     commit_id: str,
-    target_ref: str
+    target_ref: str,
 ) -> Optional[PullRequest]:
     """Search for a completed pull request whose merged commit matches the given commit ID."""
-    endpoint = (
-        f"/{project_name}/_apis/git/repositories/{repository_id}/pullRequests"
-    )
+    endpoint = f"/{project_name}/_apis/git/repositories/{repository_id}/pullRequests"
     params = {
         "api-version": "7.1-preview.1",
         "searchCriteria.status": "completed",
         "searchCriteria.targetRefName": target_ref,
-        "$top": 100
+        "$top": 100,
     }
 
     try:
@@ -210,7 +211,9 @@ def find_pr_by_commit_id(
 
 def get_oldest_commit_from_pr(client, project_name, repo_id, pr_id):
     """Get the first commit in a given pull request."""
-    endpoint = f"/{project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pr_id}/commits"
+    endpoint = (
+        f"/{project_name}/_apis/git/repositories/{repo_id}/pullRequests/{pr_id}/commits"
+    )
     params = {"api-version": "7.1-preview.1"}
     response = client.get(endpoint, params=params)
 
