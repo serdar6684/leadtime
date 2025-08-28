@@ -1,21 +1,19 @@
 # Leadtime
 
-## Présentation
+## Overview
 
-The project uses [pip-tools](https://github.com/jazzband/pip-tools) to maintain pinned dependency files.
-Leadtime est un utilitaire en ligne de commande permettant de collecter les
-indicateurs de délai DORA à partir des releases Azure DevOps.
+Leadtime is a command-line utility that gathers DORA lead time metrics from Azure DevOps releases.
 
 The project uses [pip-tools](https://github.com/jazzband/pip-tools) to maintain pinned dependency files.
 
 ## Installation
 
-### Prérequis
+### Prerequisites
 
 - Python 3.10+
 - `pip`
 
-### Installation des dépendances
+### Dependency Installation
 
 ```bash
 pip install -r requirements.txt
@@ -23,17 +21,17 @@ pip install -r requirements.txt
 
 ## Configuration
 
-Copiez `example.env` vers `.env` puis renseignez les valeurs nécessaires
-(identifiants Azure DevOps, etc.) :
+Copy `example.env` to `.env` and fill in the required values
+(Azure DevOps credentials, etc.):
 
 ```bash
 cp example.env .env
-# éditer .env
+# edit .env
 ```
 
-## Utilisation
+## Usage
 
-Exécuter l'application :
+Run the application:
 
 ```bash
 python main.py
@@ -43,7 +41,7 @@ python main.py
 
 ```bash
 pytest
-# ou
+# or
 make test
 ```
 
@@ -55,34 +53,32 @@ black --check .
 bandit -r .
 ```
 
-## Workflow complet
+## Complete workflow
 
 ```bash
-git clone <URL-du-dépôt>
+git clone <repository-url>
 cd leadtime
 pip install -r requirements.txt
 cp example.env .env
-# éditer .env
+# edit .env
 python main.py
 ```
 
-## Mise à jour des dépendances
+## Updating Dependencies
 
-Le projet utilise [pip-tools](https://github.com/jazzband/pip-tools) pour
-verrouiller les dépendances. Pour régénérer `requirements.txt` et
-`requirements-dev.txt` à partir des fichiers `.in` :
+To regenerate `requirements.txt` and `requirements-dev.txt` from the `.in` files, run:
 
 ```bash
 ./scripts/lock.sh
 ```
 
-This script compiles `requirements.in` and `requirements-dev.in` into their corresponding lock files.
+This script uses [pip-tools](https://github.com/jazzband/pip-tools) to compile `requirements.in` and `requirements-dev.in` into their corresponding lock files.
 
 ## How to upgrade safely
 
-1. Mettre à jour les fichiers `.in` ou `pyproject.toml` avec les nouvelles versions.
-2. Lancer le script de lock pour régénérer les fichiers `.txt`.
-3. Exécuter la suite de tests et de lint (`pytest`, `pylint`, etc.).
-4. Créer un commit avec les modifications et les versions verrouillées.
+1. Update the `.in` files or `pyproject.toml` with the new versions.
+2. Run the lock script to regenerate the `.txt` files.
+3. Run the test and lint suite (`pytest`, `pylint`, etc.).
+4. Create a commit with the changes and the locked versions.
 
-Utilisez des branches dédiées pour les mises à niveau et vérifiez les changelogs majeurs avant d'appliquer les mises à jour.
+Use dedicated branches for upgrades and check major changelogs before applying updates.
